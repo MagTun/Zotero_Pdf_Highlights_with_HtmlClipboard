@@ -1,6 +1,14 @@
 # HtmlClipboard
 # An interface to the "HTML Format" clipboard data format
-# Save this script as HtmlClipboard.py in C:\Python##\Lib\site-packages\
+
+
+#############How to use this script
+### Save this script as HtmlClipboard.py in C:\Python##\Lib\site-packages\
+###
+###In your script: 
+### to call this script: import HtmlClipboard
+### to retrieve a clipboard:  if HtmlClipboard.HasHtml(): fragment = HtmlClipboard.GetHtml()
+### to save data into the clipboard: HtmlClipboard.PutHtml("<p>It's easy!")
 
 __author__ = "Phillip Piper (jppx1[at]bigfoot.com)"
 __date__ = "2006-02-21"
