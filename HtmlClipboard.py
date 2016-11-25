@@ -1,20 +1,38 @@
-# HtmlClipboard
-# An interface to the "HTML Format" clipboard data format
+"""
+Modified by RandomHardcoreJerks 
+    Added fix for error when clipboard busy
+	Sep 24, 2013
+	Requires pywin32
 
+original: http://code.activestate.com/recipes/474121/
+    # HtmlClipboard
+    # An interface to the "HTML Format" clipboard data format
+    
+    __author__ = "Phillip Piper (jppx1[at]bigfoot.com)"
+    __date__ = "2006-02-21"
+    __version__ = "0.1"
 
-#############How to use this script
+#######################                        How to use HtmlClipboard                         ####################################
 ### Save this script as HtmlClipboard.py in C:\Python##\Lib\site-packages\
 ###
-###In your script: 
-### to call this script: import HtmlClipboard
-### to retrieve a clipboard:  if HtmlClipboard.HasHtml(): fragment = HtmlClipboard.GetHtml()
-### to save data into the clipboard: HtmlClipboard.PutHtml("<p>It's easy!")
-
-__author__ = "Phillip Piper (jppx1[at]bigfoot.com)"
-__date__ = "2006-02-21"
-__version__ = "0.1"
-
+### To get clipboard with HTML: 
+### import HtmlClipboard
+### if HtmlClipboard.HasHtml(): fragment = HtmlClipboard.GetHtml()
+###
+### To send HTML to the clipboard 
+### import HtmlClipboard
+### HtmlClipboard.PutHtml("<p>It's easy!</p>")
+###
+### for more details:	http://stackoverflow.com/questions/40439917/modifying-a-clipboard-content-to-be-treated-as-html/40789928#40789928
+###
+###
+	
+	
+"""
+# import time and import random  added by RandomHardcoreJerks to handle clipboard error when busy
 import re
+import time
+import random
 import win32clipboard
 
 #---------------------------------------------------------------------------
@@ -63,7 +81,7 @@ class HtmlClipboard:
         "StartSelection:%09d\r\n" \
         "EndSelection:%09d\r\n" \
         "SourceURL:%s\r\n"
-
+#Markerblock when there is an explicit selection
     MARKER_BLOCK_EX = \
         "Version:(\S+)\s+" \
         "StartHTML:(\d+)\s+" \
@@ -73,15 +91,17 @@ class HtmlClipboard:
         "StartSelection:(\d+)\s+" \
         "EndSelection:(\d+)\s+" \
         "SourceURL:(\S+)"
+# re.compile = Compile a regular expression pattern into a regular expression object, which can be used in a method ei : MARKER_BLOCK_EX_RE.match(src) 
     MARKER_BLOCK_EX_RE = re.compile(MARKER_BLOCK_EX)
 
+#Markerblock when there is NO explicit selection
     MARKER_BLOCK = \
         "Version:(\S+)\s+" \
         "StartHTML:(\d+)\s+" \
         "EndHTML:(\d+)\s+" \
         "StartFragment:(\d+)\s+" \
         "EndFragment:(\d+)\s+" \
-           "SourceURL:(\S+)"
+        "SourceURL:(\S+)"
     MARKER_BLOCK_RE = re.compile(MARKER_BLOCK)
 
     DEFAULT_HTML_BODY = \
@@ -135,21 +155,44 @@ class HtmlClipboard:
         Read and decode the HTML from the clipboard
         """
 
-        try:
-            win32clipboard.OpenClipboard(0)
-            src = win32clipboard.GetClipboardData(self.GetCfHtml())
-            #print src
-            src = src.decode("UTF-8")
-            self.DecodeClipboardSource(src)
-        finally:
-            win32clipboard.CloseClipboard()
+# If clipboard is used by another programs and so not accessible to the script, keep trying 5 times : implement fix from: http://teachthe.net/?p=1137
 
+        cbOpened = False
+        while not cbOpened:
+            try:
+                win32clipboard.OpenClipboard(0)
+                src = win32clipboard.GetClipboardData(self.GetCfHtml())
+                src = src.decode("UTF-8")
+                #print(src)
+                self.DecodeClipboardSource(src)
+                
+                cbOpened = True
 
+                win32clipboard.CloseClipboard()
+            except Exception as err:
+                # If access is denied, that means that the clipboard is in use.
+                # Keep trying until it's available.
+                if err.winerror == 5:  # Access Denied
+                    pass
+                    # wait on clipboard because something else has it. we're waiting a
+                    # random amount of time before we try again so we don't collide again
+                    time.sleep( random.random()/50 )
+                elif err.winerror == 1418:  # doesn't have board open
+                    pass
+                elif err.winerror == 0:  # open failure
+                    pass
+                else:
+                    print( 'ERROR in Clipboard section of readcomments: %s' % err)
+
+                    pass        
+					
+ # end of handling clipboard error 
+		
     def DecodeClipboardSource(self, src):
         """
         Decode the given string to figure out the details of the HTML that's on the string
         """
-                    # Try the extended format first (which has an explicit selection)
+        # Try the extended format first (which has an explicit selection)
         matches = self.MARKER_BLOCK_EX_RE.match(src)
         if matches:
             self.prefix = matches.group(0)
@@ -159,7 +202,7 @@ class HtmlClipboard:
             self.selection = src[int(matches.group(6)):int(matches.group(7))]
             self.source = matches.group(8)
         else:
-                    # Failing that, try the version without a selection
+            # Failing that, try the version without a selection
             matches = self.MARKER_BLOCK_RE.match(src)
             if matches:
                 self.prefix = matches.group(0)
@@ -237,7 +280,7 @@ class HtmlClipboard:
             win32clipboard.OpenClipboard(0)
             win32clipboard.EmptyClipboard()
             src = self.EncodeClipboardSource(html, fragmentStart, fragmentEnd, selectionStart, selectionEnd, source)
-            #print src
+            #print(src)
             src = src.encode("UTF-8")
             win32clipboard.SetClipboardData(self.GetCfHtml(), src)
         finally:
@@ -248,7 +291,7 @@ class HtmlClipboard:
         """
         Join all our bits of information into a string formatted as per the HTML format specs.
         """
-                    # How long is the prefix going to be?
+        # How long is the prefix going to be?
         dummyPrefix = self.MARKER_BLOCK_OUTPUT % (0, 0, 0, 0, 0, 0, source)
         lenPrefix = len(dummyPrefix)
 
@@ -262,16 +305,16 @@ class HtmlClipboard:
 def DumpHtml():
 
     cb = HtmlClipboard()
-    print ("GetAvailableFormats()=%s" % str(cb.GetAvailableFormats()))
-    print ("HasHtmlFormat()=%s" % str(cb.HasHtmlFormat()))
+    print("GetAvailableFormats()=%s" % str(cb.GetAvailableFormats()))
+    print("HasHtmlFormat()=%s" % str(cb.HasHtmlFormat()))
     if cb.HasHtmlFormat():
         cb.GetFromClipboard()
-        print ("prefix=>>>%s<<<END" % cb.prefix)
-        print ("htmlClipboardVersion=>>>%s<<<END" % cb.htmlClipboardVersion)
-        print ("GetSelection()=>>>%s<<<END" % cb.GetSelection())
-        print ("GetFragment()=>>>%s<<<END" % cb.GetFragment())
-        print ("GetHtml()=>>>%s<<<END" % cb.GetHtml())
-        print ("GetSource()=>>>%s<<<END" % cb.GetSource())
+        print("prefix=>>>%s<<<END" % cb.prefix)
+        print("htmlClipboardVersion=>>>%s<<<END" % cb.htmlClipboardVersion)
+        print("GetSelection()=>>>%s<<<END" % cb.GetSelection())
+        print("GetFragment()=>>>%s<<<END" % cb.GetFragment())
+        print("GetHtml()=>>>%s<<<END" % cb.GetHtml())
+        print("GetSource()=>>>%s<<<END" % cb.GetSource())
 
 
 if __name__ == '__main__':
@@ -280,9 +323,9 @@ if __name__ == '__main__':
         data = "<p>Writing to the clipboard is <strong>easy</strong> with this code.</p>"
         PutHtml(data)
         if GetHtml() == data:
-            print ("passed")
+            print("passed")
         else:
-            print ("failed")
+            print("failed")
 
     test_SimpleGetPutHtml()
     #DumpHtml()
