@@ -22,7 +22,7 @@ original: http://code.activestate.com/recipes/474121/
 ### To send HTML to the clipboard 
 ### import HtmlClipboard
 ### HtmlClipboard.PutHtml("<p>It's easy!</p>")
-###
+### HtmlClipboard.PutHtml("<p>" + MyVariable + "</p>")
 ### for more details:	http://stackoverflow.com/questions/40439917/modifying-a-clipboard-content-to-be-treated-as-html/40789928#40789928
 ###
 ###
