@@ -7,5 +7,5 @@ WinGetActiveTitle, Title
 ControlGetText, Page, Edit2,  %Title%
 clipboard = %Page%###%Title%###%texthh%
 ClipWait
-Run Highlight_from_pdf_with_url.py, C:\Users\xxx\Desktop
+Run Zotero_Pdf_Highlight_and_url.py, C:\Users\xxx\Desktop\
 return
