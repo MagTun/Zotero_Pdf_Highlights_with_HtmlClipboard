@@ -1,6 +1,6 @@
-# Zotero_Pdf_Highlights_with_HtmlClipboard
+# Test case for Firefox: 
 
-Test case for Firefox: Tested on Python 3.5 
+Tested on Python 3.5 
 1) Save HtmlClipboard.py in the Lib\site-packages\ folder of your Pyton installation
 2) Run Debugging_Firefox.py
 3) Paste what the script put in your clipboard in different HTML editors: you can use http://www.quackit.com/html/online-html-editor/
