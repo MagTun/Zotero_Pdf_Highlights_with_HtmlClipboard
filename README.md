@@ -7,12 +7,19 @@ Test case for Firefox: Tested on Python 3.5
 
 Then edit these lines in HtmlClipboard.py (around 277) to see how the bug can be fixed:
 change 
-fragmentEnd = (fragmentStart + len(fragment))
+
+  fragmentEnd = (fragmentStart + len(fragment))
+
 to 
-fragmentEnd = (fragmentStart + len(fragment)) +1000
+
+  fragmentEnd = (fragmentStart + len(fragment)) +1000
+
 
 and 
-selectionEnd = (selectionStart + len(selection)) 
+
+  selectionEnd = (selectionStart + len(selection)) 
+
 to 
-selectionEnd = (selectionStart + len(selection)) +1000
+
+  selectionEnd = (selectionStart + len(selection)) +1000
 
